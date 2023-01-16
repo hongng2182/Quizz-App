@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function IntroPage() {
     return (
         <div className="intro">
@@ -5,9 +7,9 @@ function IntroPage() {
                 Quizzical
             </div>
             <div className="description">
-                Some description of needed
+                A mini quiz of 5 questions to test your general knowledge on any topic.
             </div>
-            <button type="button">Start Quiz</button>
+            <Link to="/questions"><button> Start Quiz</button></Link>
         </div>
     )
 }
