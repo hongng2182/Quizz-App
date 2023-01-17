@@ -5,7 +5,7 @@
 
 ## Preview
 
-![](/quiz-app/public/Quizzical-demo.gif "Quizzical demo.")
+![](https://github.com/hongng2182/Quizz-App/blob/master/public/Quizzical-demo.gif "Quizzical demo.")
 
 ## Features
 
