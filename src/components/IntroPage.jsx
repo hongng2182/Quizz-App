@@ -9,7 +9,7 @@ function IntroPage() {
             <div className="description">
                 A mini quiz of 5 questions to test your general knowledge on any topic.
             </div>
-            <Link to="/questions"><button> Start Quiz</button></Link>
+            <Link to="/select"><button> Select your topic</button></Link>
         </div>
     )
 }

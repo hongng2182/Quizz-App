@@ -1,24 +1,32 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { nanoid } from 'nanoid'
+import { useLocation } from "react-router-dom";
 
 function Questions() {
     const [questions, setQuestions] = useState([])
-    const [checkAnswer, setCheckAnswer] = useState(false)
+    const [startCheckAnswer, setStartCheckAnswer] = useState(false)
     const [numOfCorrectAnswer, setNumOfCorrectAnswer] = useState(0)
+    const [hasReceiveData, setHasReceiveData] = useState(true)
 
+    // Use location to get formData from TopicChosen page
+    const location = useLocation();
+    const request = location.state
 
+    // Fetch questions data from API: handle response data length receive < 5
     useEffect(() => {
-        fetch(`https://opentdb.com/api.php?amount=5`)
+        fetch(`https://opentdb.com/api.php?amount=5${request.category}${request.difficulty}${request.type}`)
             .then(res => res.json())
             .then(data => {
+                if (data.results.length < 5) {
+                    setHasReceiveData(false)
+                }
+                // Map each question from API response to return new question object with one added key: "anwsers" - an array of answer object 
                 const dataArr = data.results.map(question => {
                     let correctAns = question.correct_answer
-                    console.log("correct Ans: " + correctAns)
                     let answersArr = question.incorrect_answers.slice()
                     let index = Math.floor(Math.random() * answersArr.length)
                     answersArr.splice(index, 0, correctAns)
-
                     let answers = answersArr.map(answer => {
                         return {
                             id: nanoid(),
@@ -26,28 +34,27 @@ function Questions() {
                             selected: false
                         }
                     })
-
                     return {
                         id: nanoid(),
                         ...question,
                         answers: answers
                     }
                 })
-                console.log(dataArr)
                 setQuestions(dataArr)
             })
     }, [])
 
-
+    // Decode special characters for HTML display
     function decodeHtml(html) {
         var txt = document.createElement("textarea");
         txt.innerHTML = html;
         return txt.value;
     }
 
+    // Map through answers array to return each answer based on purpose of showing questions or checked answers
     function Answers(props) {
         let answers = props.value.map(answer => {
-            if (!checkAnswer) {
+            if (!startCheckAnswer) {
                 return <p onClick={() => props.handleClick(props.questionId, answer.id)}
                     key={answer.id} className={`answer ${answer.selected ? 'selected' : ''}`}>{decodeHtml(answer.value)}</p>
             }
@@ -57,7 +64,7 @@ function Questions() {
         })
         return answers
     }
-
+    // Handle when each answer is selected
     function selectedAnswer(questionId, answerId) {
         setQuestions(oldQuestionArr => {
             return oldQuestionArr.map(question => {
@@ -86,8 +93,10 @@ function Questions() {
 
         })
     }
+
+    // Handle when button  "Check Answers" is clicked
     function checkAnswers() {
-        setCheckAnswer(true)
+        setStartCheckAnswer(true)
         let correctAnwser = 0;
         setQuestions(oldQuestionArr => {
             return oldQuestionArr.map(question => {
@@ -129,10 +138,12 @@ function Questions() {
         })
     }
 
-
+    // Map through questions array to return each question and its answers
     const question = questions.map(item => {
         return <div key={item.id} className="question-container">
-            <p className="question">{decodeHtml(item.question)}</p>
+            <p className="question">{decodeHtml(item.question)}
+                <sup className="category">{item.category}</sup>
+                <sup className="difficulty">{item.difficulty}</sup></p>
             <div className="answer-container">
                 <Answers value={item.answers}
                     handleClick={selectedAnswer}
@@ -141,8 +152,9 @@ function Questions() {
         </div>
     })
 
+    // Display footer button based on purpose: Check Answers or Reset Quiz 
     function Footer(props) {
-        if (!props.checkAnswer) {
+        if (!props.startCheckAnswer) {
             return <button onClick={checkAnswers}>Check Answers</button>
         } else {
             return <div className="footer">
@@ -151,10 +163,14 @@ function Questions() {
             </div>
         }
     }
+    // render Questions: if data from API is recieved or not
     return (
-        <>
+        hasReceiveData ? <>
             {question}
-            <Footer checkAnswer={checkAnswer} numOfCorrectAnswer={numOfCorrectAnswer} />
+            <Footer startCheckAnswer={startCheckAnswer} numOfCorrectAnswer={numOfCorrectAnswer} />
+        </> : <>
+            <p className="error-message">We don't have enough questions that match your preferences, please choose another topic </p>
+            <Link to="/select"><button>Go Back</button></Link>
         </>
     )
 }
